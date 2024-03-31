@@ -18,13 +18,15 @@ path operator""_p(const char* data, std::size_t sz) {
 static bool Preprocess(const path& in_file, const path& out_file, const vector<path>& include_directories, int line_num = 0) {
 	ifstream in(in_file);
 	if (!in)return false;
+
 	ofstream out(out_file, ios::app);
+	if (!out)return false;
 
 	static regex include_quote_regex(R"/(\s*#\s*include\s*"([^"]*)"\s*)/");
 	static regex include_brack_regex(R"/(\s*#\s*include\s*<([^>]*)>\s*)/");
 	smatch quote;
-
 	string line;
+
 	while (getline(in, line)) {
 		if (regex_match(line, quote, include_quote_regex)) {
 			++line_num;
@@ -34,7 +36,9 @@ static bool Preprocess(const path& in_file, const path& out_file, const vector<p
 			if (!Preprocess(res_in_file, out_file, include_directories, line_num)) {
 				for (auto& dir : include_directories) {
 					path res_in_file = dir / new_in_file;
-					if (Preprocess(res_in_file, out_file, include_directories, line_num)) { break; }
+					if (Preprocess(res_in_file, out_file, include_directories, line_num)) { 
+						break; 
+					}
 					else if (include_directories[static_cast<int>(include_directories.size() - 1)] == dir) {
 						cout << "unknown include file " << new_in_file.string() << " at file " << in_file.string() << " at line " << line_num << endl;
 						return false;
@@ -48,7 +52,9 @@ static bool Preprocess(const path& in_file, const path& out_file, const vector<p
 			new_in_file.make_preferred();
 			for (auto& dir : include_directories) {
 				path res_in_file = dir / new_in_file;
-				if (Preprocess(res_in_file, out_file, include_directories, line_num)) { break; }
+				if (Preprocess(res_in_file, out_file, include_directories, line_num)) { 
+					break; 
+				}
 				else if (include_directories[static_cast<int>(include_directories.size() - 1)] == dir) {
 					cout << "unknown include file " << new_in_file.string() << " at file " << in_file.string() << " at line " << line_num << endl;
 					return false;
